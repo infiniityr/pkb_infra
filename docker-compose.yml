@@ -1,0 +1,51 @@
+version: '3'
+services:
+  nginx:
+    build:
+      context: ./images/nginx
+    ports:
+      - '8000:80'
+    environment:
+      - EXTERNAL_DOMAIN=localhost
+    volumes:
+      - './images/nginx/conf/nginx.conf:/etc/nginx/nginx.conf'
+    networks:
+      - frontend
+      - backend
+    depends_on:
+      - pkb_back
+      - mongo
+  mongo:
+    image: 'mongo:latest'
+    volumes:
+      - './datas/mongo:/data/db'
+    networks:
+      - backend
+  # mongoui:
+  #   image: 'mongo-express:latest'
+  #   environment:
+  #     - ME_CONFIG_MONGODB_ENABLE_ADMIN=false
+  #     - ME_CONFIG_MONGODB_SERVER=mongo
+  #     - ME_CONFIG_MONGODB_PORT=27017
+  #     - ME_CONFIG_OPTIONS_EDITORTHEME=darcula
+  #   depends_on:
+  #     - mongo
+  #   networks:
+  #     - backend
+  pkb_back:
+    build:
+      context: ./images/pkb_back
+    restart: on-failure
+    environment:
+      - MONGO_PORT=27017
+      - MONGO_HOST=mongo
+      - MONGO_DATABASE=pkb
+    volumes:
+        - ../pkb_back/:/root/app
+    depends_on:
+      - mongo
+    networks:
+      - backend
+networks:
+  frontend: null
+  backend: null
